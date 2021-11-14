@@ -1,50 +1,47 @@
-library flutter_masked_text;
-
 import 'package:flutter/material.dart';
 
 class MaskedTextController extends TextEditingController {
-  MaskedTextController({String text, this.mask, Map<String, RegExp> translator})
+  MaskedTextController({String? text, this.mask, Map<String , RegExp >? translator})
       : super(text: text) {
     this.translator = translator ?? MaskedTextController.getDefaultTranslator();
 
-    this.addListener(() {
-      var previous = this._lastUpdatedText;
-      if (this.beforeChange(previous, this.text)) {
-        this.updateText(this.text);
-        this.afterChange(previous, this.text);
+    addListener(() {
+      var previous = _lastUpdatedText;
+      if (beforeChange(previous, this.text)) {
+        updateText(this.text);
+        afterChange(previous, this.text);
       } else {
-        this.updateText(this._lastUpdatedText);
+        updateText(_lastUpdatedText);
       }
     });
 
-    this.updateText(this.text);
+    updateText(this.text);
   }
 
-  String mask;
+  String? mask;
 
-  Map<String, RegExp> translator;
+  late Map<String , RegExp >  translator;
 
-  Function afterChange = (String previous, String next) {};
-  Function beforeChange = (String previous, String next) {
+  Function  afterChange = (String  previous, String  next) {};
+  Function  beforeChange = (String  previous, String  next) {
     return true;
   };
 
-  String _lastUpdatedText = '';
+  String  _lastUpdatedText = '';
 
-  void updateText(String text) {
-    if(text != null){
-      this.text = this._applyMask(this.mask, text);
-    }
-    else {
-      this.text = '';
+  void updateText(String  _text) {
+    if (_text != null /* == true */) {
+      text = _applyMask(mask, _text);
+    } else {
+      text = '';
     }
 
-    this._lastUpdatedText = this.text;
+    _lastUpdatedText = text;
   }
 
-  void updateMask(String mask, {bool moveCursorToEnd = true}) {
+  void updateMask(String  mask, {bool  moveCursorToEnd = true}) {
     this.mask = mask;
-    this.updateText(this.text);
+    updateText(text);
 
     if (moveCursorToEnd) {
       this.moveCursorToEnd();
@@ -52,37 +49,37 @@ class MaskedTextController extends TextEditingController {
   }
 
   void moveCursorToEnd() {
-    var text = this._lastUpdatedText;
-    this.selection = new TextSelection.fromPosition(
-        new TextPosition(offset: (text ?? '').length));
+    var text = _lastUpdatedText;
+    selection =
+        TextSelection.fromPosition(TextPosition(offset: (text ?? '').length));
   }
 
   @override
-  void set text(String newText) {
+  set text(String? newText) {
     if (super.text != newText) {
-      super.text = newText;
-      this.moveCursorToEnd();
+      super.text = newText!;
+      moveCursorToEnd();
     }
   }
 
-  static Map<String, RegExp> getDefaultTranslator() {
+  static Map<String , RegExp >  getDefaultTranslator() {
     return {
-      'A': new RegExp(r'[A-Za-z]'),
-      '0': new RegExp(r'[0-9]'),
-      '@': new RegExp(r'[A-Za-z0-9]'),
-      '*': new RegExp(r'.*')
+      'A': RegExp(r'[A-Za-z]'),
+      '0': RegExp(r'[0-9]'),
+      '@': RegExp(r'[A-Za-z0-9]'),
+      '*': RegExp(r'.*')
     };
   }
 
-  String _applyMask(String mask, String value) {
-    String result = '';
+  String  _applyMask(String? mask, String  value) {
+    String  result = '';
 
     var maskCharIndex = 0;
     var valueCharIndex = 0;
 
     while (true) {
       // if mask is ended, break.
-      if (maskCharIndex == mask.length) {
+      if (maskCharIndex == mask!.length) {
         break;
       }
 
@@ -103,8 +100,8 @@ class MaskedTextController extends TextEditingController {
       }
 
       // apply translator if match
-      if (this.translator.containsKey(maskChar)) {
-        if (this.translator[maskChar].hasMatch(valueChar)) {
+      if (translator.containsKey(maskChar)) {
+        if (translator[maskChar]!.hasMatch(valueChar)) {
           result += valueChar;
           maskCharIndex += 1;
         }
@@ -123,94 +120,91 @@ class MaskedTextController extends TextEditingController {
   }
 }
 
-/**
- * Mask for monetary values.
- */
 class MoneyMaskedTextController extends TextEditingController {
   MoneyMaskedTextController(
-      {double initialValue = 0.0,
-        this.decimalSeparator = ',',
-        this.thousandSeparator = '.',
-        this.rightSymbol = '',
-        this.leftSymbol = '',
-        this.precision = 2}) {
+      {double  initialValue = 0.0,
+      this.decimalSeparator = ',',
+      this.thousandSeparator = '.',
+      this.rightSymbol = '',
+      this.leftSymbol = '',
+      this.precision = 2}) {
     _validateConfig();
 
-    this.addListener(() {
-      this.updateValue(this.numberValue);
-      this.afterChange(this.text, this.numberValue);
+    addListener(() {
+      updateValue(numberValue);
+      afterChange(text, numberValue);
     });
 
-    this.updateValue(initialValue);
+    updateValue(initialValue);
   }
 
-  final String decimalSeparator;
-  final String thousandSeparator;
-  final String rightSymbol;
-  final String leftSymbol;
-  final int precision;
+  final String  decimalSeparator;
+  final String  thousandSeparator;
+  final String  rightSymbol;
+  final String  leftSymbol;
+  final int  precision;
 
-  Function afterChange = (String maskedValue, double rawValue) {};
+  Function  afterChange = (String  maskedValue, double  rawValue) {};
 
-  double _lastValue = 0.0;
+  double  _lastValue = 0.0;
 
-  void updateValue(double value) {
-    double valueToUse = value;
+  void updateValue(double  value) {
+    double  valueToUse = value;
 
     if (value.toStringAsFixed(0).length > 12) {
       valueToUse = _lastValue;
-    }
-    else {
+    } else {
       _lastValue = value;
     }
 
-    String masked = this._applyMask(valueToUse);
+    String  masked = _applyMask(valueToUse);
 
-    if (rightSymbol.length > 0) {
+    if (rightSymbol.isNotEmpty) {
       masked += rightSymbol;
     }
 
-    if (leftSymbol.length > 0) {
+    if (leftSymbol.isNotEmpty) {
       masked = leftSymbol + masked;
     }
 
-    if (masked != this.text) {
-      this.text = masked;
+    if (masked != text) {
+      text = masked;
 
-      var cursorPosition = super.text.length - this.rightSymbol.length;
-      this.selection = new TextSelection.fromPosition(
-          new TextPosition(offset: cursorPosition));
+      var cursorPosition = super.text.length - rightSymbol.length;
+      selection =
+          TextSelection.fromPosition(TextPosition(offset: cursorPosition));
     }
   }
 
-  double get numberValue {
-    List<String> parts = _getOnlyNumbers(this.text).split('').toList(growable: true);
+  double  get numberValue {
+    List<String >  parts = _getOnlyNumbers(text).split('').toList(growable: true);
 
     parts.insert(parts.length - precision, '.');
 
     return double.parse(parts.join());
   }
 
-  _validateConfig() {
-    bool rightSymbolHasNumbers = _getOnlyNumbers(this.rightSymbol).length > 0;
+  void _validateConfig() {
+    bool  rightSymbolHasNumbers = _getOnlyNumbers(rightSymbol).isNotEmpty;
 
     if (rightSymbolHasNumbers) {
-      throw new ArgumentError("rightSymbol must not have numbers.");
+      throw ArgumentError('rightSymbol must not have numbers.');
     }
   }
 
-  String _getOnlyNumbers(String text) {
-    String cleanedText = text;
+  String  _getOnlyNumbers(String  text) {
+    String  cleanedText = text;
 
-    var onlyNumbersRegex = new RegExp(r'[^\d]');
+    var onlyNumbersRegex = RegExp(r'[^\d]');
 
     cleanedText = cleanedText.replaceAll(onlyNumbersRegex, '');
 
     return cleanedText;
   }
 
-  String _applyMask(double value) {
-    List<String> textRepresentation = value.toStringAsFixed(precision)
+  String  _applyMask(double  value) {
+    List<String >  textRepresentation = value
+        .toStringAsFixed(precision)
         .replaceAll('.', '')
         .split('')
         .reversed
@@ -221,8 +215,7 @@ class MoneyMaskedTextController extends TextEditingController {
     for (var i = precision + 4; true; i = i + 4) {
       if (textRepresentation.length > i) {
         textRepresentation.insert(i, thousandSeparator);
-      }
-      else {
+      } else {
         break;
       }
     }
